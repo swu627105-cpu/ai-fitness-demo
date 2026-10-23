@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AI 健身">
+<title>AI 健身 · 训练与记录</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #f2f4f7;
+    --border: #e4e7ec;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, .05);
+    --shadow-md: 0 6px 20px rgba(16, 24, 40, .07);
+    --radius: 14px;
+    --ink: #101828;
+    --ink-2: #344054;
+    --muted: #667085;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --ok: #059669;
+    --warn: #b54708;
+    --danger: #b42318;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16,24,40,.05);
+    --shadow-lg: 0 12px 32px rgba(16,24,40,.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14.5px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- 外壳：桌面左侧导航 ---------- */
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 236px; flex: none; background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px; padding: 20px 18px 16px;
+  }
+  .brand .mark {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-size: 17px;
+  }
+  .brand .name { font-weight: 650; font-size: 15px; letter-spacing: -.2px; }
+  .brand .ver { font-size: 11px; color: var(--muted); }
+
+  .nav { padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    color: #344054; font-size: 14px; font-weight: 500; cursor: pointer; border: none;
+    background: transparent; font-family: inherit; text-align: left; width: 100%;
+  }
+  .nav-item:hover { background: var(--surface-2); }
+  .nav-item { display: flex; align-items: center; gap: 9px; }
+  .nav-item.on { background: #eef4ff; color: var(--primary); font-weight: 600; }
+  .nav-item .ico { width: 18px; text-align: center; opacity: .85; }
+
+  .side-foot { margin-top: auto; padding: 14px; border-top: 1px solid var(--border); }
+  .account {
+    display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 12px;
+  }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    background: #eef4ff; color: var(--primary);
+    display: flex; align-items: center; justify-content: center; font-weight: 650; font-size: 14px;
+  }
+  .account .who { font-size: 13px; font-weight: 600; }
+  .account .role { font-size: 11.5px; color: var(--muted); }
+
+  /* ---------- 主区域 ---------- */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .page-head {
+    height: 68px; flex: none; padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); background: rgba(255,255,255,.8);
+    backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5;
+  }
+  .page-head h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.2px; }
+  .page-head .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+  .content { padding: 26px 32px 48px; width: 100%; max-width: 1080px; }
+
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.show { display: flex; }
+
+  /* ---------- 通用组件 ---------- */
+  .card {
+    box-shadow: var(--shadow-sm);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .card-pad { padding: 20px; }
+  .card-title { font-size: 15px; font-weight: 650; }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.65; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 18px; border-radius: 10px; border: 1px solid transparent;
+    background: var(--primary); color: #fff; font-size: 14.5px; font-family: inherit;
+    font-weight: 550; cursor: pointer; transition: background .15s, box-shadow .15s;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { background: #f2f4f7; color: #98a2b3; cursor: not-allowed; border-color: var(--border); }
+  .btn.ghost { background: var(--surface); color: var(--ink-2); border-color: var(--border); }
+  .btn.ghost:hover { background: var(--surface-2); }
+  .btn.block { width: 100%; }
+
+  input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink); font-size: 14.5px; font-family: inherit;
+  }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+
+  /* ---------- 登录 ---------- */
+  /* 登录页是独立入口：不显示后台侧栏，避免"半个控制台"的观感 */
+  body[data-screen="login"] .sidebar { display: none; }
+  body[data-screen="login"] .shell { grid-template-columns: 1fr; }
+  #screen-login {
+    justify-content: center; align-items: center; padding: 40px 20px;
+    background: radial-gradient(1200px 620px at 50% -10%, #eaf2ff 0%, var(--bg) 60%);
+  }
+  .login-card { width: 100%; max-width: 420px; padding: 32px; }
+  .login-head { text-align: center; margin-bottom: 24px; }
+  .login-head .mark {
+    width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 14px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+  .login-head h2 { margin: 0; font-size: 20px; font-weight: 650; }
+  .login-head p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+  .divider { display: flex; align-items: center; gap: 10px; color: #98a2b3; font-size: 12px; margin: 16px 0; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* ---------- 首页 ---------- */
+  .hero {
+    padding: 24px; margin-bottom: 18px;
+    background: linear-gradient(120deg, #eef4ff 0%, #f7f8fa 60%);
+    border: 1px solid #dbe6fb; border-radius: var(--radius);
+  }
+  .hero h2 { margin: 0 0 6px; font-size: 20px; font-weight: 650; letter-spacing: -.3px; }
+  .hero p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat { padding: 18px; }
+  .stat .v { font-size: 34px; font-weight: 700; letter-spacing: -1px; color: #101828; font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: #667085; margin-top: 4px; letter-spacing: .2px; }
+
+  .std-entry {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+    padding: 16px 18px; margin: 18px 0; cursor: pointer;
+    background: linear-gradient(120deg, #eff6ff 0%, #ffffff 70%);
+    border: 1px solid #d1e9ff; border-radius: var(--radius); font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .std-entry:hover { border-color: #84caff; box-shadow: var(--shadow-md); }
+  .std-entry-ico {
+    width: 40px; height: 40px; border-radius: 11px; flex: none;
+    background: #fff; color: var(--primary); border: 1px solid #d1e9ff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .std-entry-main { flex: 1; min-width: 0; }
+  .std-entry-title { font-size: 14.5px; font-weight: 650; color: #101828; }
+  .std-entry-desc { font-size: 12.5px; color: #667085; margin-top: 3px; }
+  .std-entry-go { font-size: 13px; color: var(--primary); font-weight: 600; flex: none; }
+
+  .section-title {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 0 2px 10px;
+  }
+  .section-title h3 { margin: 0; font-size: 15px; font-weight: 650; }
+
+  .exercise-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+  .exercise {
+    text-align: left; padding: 16px 18px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: inherit; color: inherit; transition: border-color .15s, box-shadow .15s, transform .1s;
+    display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 14px;
+  }
+  .exercise:hover { border-color: #b8cdf7; box-shadow: var(--shadow-lg); }
+  .exercise:active { transform: translateY(1px); }
+  .exercise .ico {
+    width: 44px; height: 44px; border-radius: 12px; background: #eef4ff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .exercise .idx {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; font-weight: 700; letter-spacing: .5px; color: var(--primary);
+  }
+  .exercise .name { font-size: 16px; font-weight: 650; }
+  .exercise .desc { font-size: 12.5px; color: var(--muted); }
+  .exercise .go {
+    width: 30px; height: 30px; border-radius: 50%; background: #eff4ff; color: var(--primary);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600;
+  }
+  .exercise:hover .go { background: var(--primary); color: #fff; }
+
+  .record-line {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .record-line:last-child { border-bottom: none; }
+  .tag {
+    font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
+    background: #f2f4f7; color: var(--muted); font-weight: 500;
+  }
+  .tag.ok { background: #ecfdf3; color: var(--ok); }
+
+  /* ---------- 训练 ---------- */
+  #screen-train { padding: 0; }
+  .train-layout { display: flex; flex: 1; min-height: 0; }
+  .cam-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #0b0d10; }
+  .cam-wrap { position: relative; flex: 1; overflow: hidden; background: #0b0d10; min-height: 320px; }
+  #video, #overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  /* 镜像只用于前置摄像头；后置必须保持真实方向 */
+  .cam-wrap.front #video { transform: scaleX(-1); }
+  .cam-wrap.front #overlay { transform: scaleX(-1); }
+  #overlay { pointer-events: none; }
+
+  .hud {
+    position: absolute; top: 14px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between;
+    font-family: ui-monospace, monospace; font-size: 11.5px; color: #d0d5dd;
+    text-shadow: 0 1px 3px #000; pointer-events: none;
+  }
+  .prompt {
+    position: absolute; top: 46px; left: 50%; transform: translateX(-50%);
+    background: rgba(180,71,8,.92); color: #fff; padding: 8px 16px;
+    border-radius: 999px; font-size: 13px; max-width: 80%; text-align: center; display: none;
+  }
+  .prompt.show { display: block; }
+  .counter {
+    position: absolute; bottom: 62px; left: 0; right: 0; text-align: center;
+    color: #fff; pointer-events: none; text-shadow: 0 2px 16px rgba(0,0,0,.85);
+  }
+  .rep-score {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 150px;
+    padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: rgba(18, 183, 106, .92); color: #fff; white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .35); z-index: 4;
+  }
+  .rep-score b { font-size: 16px; margin-right: 2px; }
+  .counter .n { font-size: 92px; font-weight: 800; line-height: 1; letter-spacing: -3px; }
+  .counter .l { font-size: 13px; color: #d0d5dd; margin-top: 6px; }
+
+  .trainbar {
+    flex: none; display: flex; gap: 10px; padding: 12px 16px;
+    background: #0b0d10; border-top: 1px solid #1f242c;
+  }
+  .trainbar button {
+    flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #2a323c;
+    background: #161c23; color: #e6edf3; font-size: 14px; font-family: inherit; cursor: pointer;
+  }
+  .trainbar button:hover { background: #1e252e; }
+  .trainbar button.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .train-side {
+    width: 300px; flex: none; background: var(--surface);
+    border-left: 1px solid var(--border); padding: 20px; overflow-y: auto;
+  }
+  .side-title { font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+  .metric { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 13.5px; }
+  .metric:last-child { border-bottom: none; }
+  .metric b { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .side-block { margin-top: 22px; }
+  .tip {
+    background: #fffaeb; border: 1px solid #fedf89; color: #93370d;
+    border-radius: 12px; padding: 12px; font-size: 12.5px; line-height: 1.6; margin-top: 14px;
+  }
+
+  .notice {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; padding: 32px;
+    background: rgba(11,13,16,.96); text-align: center; color: #e6edf3;
+  }
+  .notice .big { font-size: 17px; font-weight: 650; }
+  .rest-count { font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: -2px; }
+  .pose-guide {
+    position: absolute; top: 44px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; max-width: 88%;
+    padding: 9px 14px; border-radius: 999px;
+    background: rgba(37, 99, 235, .94); color: #fff; font-size: 12.5px; font-weight: 500;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .3); z-index: 6;
+  }
+  .pose-guide-ico { font-size: 12px; opacity: .85; }
+  .r-summary {
+    padding: 14px 18px; margin-bottom: 16px; border-radius: var(--radius);
+    background: #f0f9ff; border: 1px solid #b9e6fe; color: #0b4a6f;
+    font-size: 14px; font-weight: 550; line-height: 1.6;
+  }
+  .depthbar { position: absolute; left: 14px; right: 14px; bottom: 12px; }
+  .depth-text {
+    font-size: 12px; color: #e6edf3; margin-bottom: 5px;
+    text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  }
+  .depth-track {
+    height: 8px; border-radius: 4px; background: rgba(255,255,255,.18);
+    overflow: hidden;
+  }
+  .depth-fill { height: 100%; border-radius: 4px; background: #2563eb; transition: width .12s, background .2s; }
+  #flipCam {
+    position: absolute; top: 46px; right: 12px; z-index: 5;
+    padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25);
+    background: rgba(11,13,16,.6); color: #e6edf3; font-size: 12px;
+    cursor: pointer; backdrop-filter: blur(4px);
+  }
+  #flipCam:disabled { opacity: .5; cursor: default; }
+  .notice ol { text-align: left; color: #98a2b3; font-size: 13px; line-height: 1.9; margin: 0; padding-left: 18px; }
+  .notice .actions { display: flex; gap: 10px; }
+
+  /* ---------- 报告 ---------- */
+  .report-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 18px; }
+  .big-metric { display: flex; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .big-metric:last-child { border-bottom: none; }
+  .big-metric b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .fb-sec { margin-bottom: 14px; }
+  .fb-sec:last-child { margin-bottom: 0; }
+  .fb-title { font-size: 13px; font-weight: 650; margin-bottom: 6px; }
+  .fb-item {
+    font-size: 13px; line-height: 1.65; color: #344054;
+    padding: 7px 10px; border-radius: 8px; margin-bottom: 4px;
+    background: #f8fafc; border: 1px solid #eef2f6;
+  }
+  .fb-good .fb-title { color: #166534; }
+  .fb-good .fb-item { background: #f0fdf4; border-color: #dcfce7; }
+  .fb-issue .fb-title { color: #b42318; }
+  .fb-issue .fb-item { background: #fef3f2; border-color: #fee4e2; }
+  .fb-tip .fb-title { color: #175cd3; }
+  .fb-tip .fb-item { background: #eff8ff; border-color: #d1e9ff; }
+  .fb-plan .fb-title { color: #6941c6; }
+  .fb-plan .fb-item { background: #f9f5ff; border-color: #ece5fe; }
+  .calib-hint {
+    margin-top: 8px; font-size: 11.5px; color: #175cd3;
+    background: #eff8ff; border: 1px solid #d1e9ff; border-radius: 8px;
+    padding: 6px 9px; line-height: 1.5;
+  }
+  .goalbar { display: flex; gap: 6px; flex-wrap: wrap; }
+  .goal-chip {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fff; color: #475467; font-size: 12px; font-family: inherit; cursor: pointer;
+  }
+  .goal-chip.active { background: #2563eb; border-color: #2563eb; color: #fff; font-weight: 600; }
+  .trend-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .trend-label { width: 64px; font-size: 12.5px; color: #475467; flex-shrink: 0; }
+  .trend-track { flex: 1; height: 12px; background: #eef2f6; border-radius: 6px; overflow: hidden; }
+  .trend-bar { height: 100%; background: linear-gradient(90deg, #3b82f6, #2563eb); border-radius: 6px; }
+  .trend-value { width: 76px; text-align: right; font-size: 12px; color: #667085; flex-shrink: 0; }
+  .score-good {
+    font-size: 30px; font-weight: 700; color: #166534; letter-spacing: -0.5px;
+  }
+  .score-empty {
+    background: #fffaeb; border: 1px solid #fedf89; color: #93370d;
+    border-radius: 12px; padding: 14px; font-size: 13.5px; line-height: 1.6;
+  }
+
+  /* ---------- 记录 ---------- */
+  .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .table th {
+    text-align: left; font-weight: 600; color: var(--muted); font-size: 12px;
+    padding: 12px 14px; border-bottom: 1px solid var(--border); background: #fcfcfd;
+  }
+  .table td { padding: 13px 14px; border-bottom: 1px solid var(--border); }
+  .table tr:last-child td { border-bottom: none; }
+
+  /* ---------- 我的 ---------- */
+  .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .kv { display: flex; justify-content: space-between; padding: 9px 0; font-size: 13.5px; }
+  .kv span:first-child { color: var(--muted); }
+
+  /* ---------- 底部导航（仅窄屏） ---------- */
+  .nav-item .ico { width: 17px; height: 17px; flex: none; }
+  .tabbar .dot { display: none; }
+  .tabbar .t { gap: 4px; }
+  .tabbar .t::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; opacity: .35;
+  }
+  .tabbar .t.on::before { opacity: 1; }
+
+  /* ---------- 报告子分 ---------- */
+  .subscores { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .sub-row { display: grid; grid-template-columns: 44px 1fr 34px; align-items: center; gap: 8px; }
+  .sub-row span { font-size: 11.5px; color: #667085; }
+  .sub-row b { font-size: 12px; color: #101828; text-align: right; font-variant-numeric: tabular-nums; }
+  .sub-track { height: 7px; border-radius: 999px; background: #f2f4f7; overflow: hidden; }
+  .sub-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2563eb, #60a5fa); transition: width .3s; }
+  .sub-fill.na { background: #d0d5dd; }
+
+  /* details 折叠：默认三角太丑，换成箭头胶囊 */
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before {
+    content: '›'; display: inline-block; margin-right: 6px;
+    transition: transform .15s; font-weight: 700;
+  }
+  details[open] > summary::before { transform: rotate(90deg); }
+  details > summary {
+    display: inline-flex; align-items: center;
+    padding: 6px 12px; border-radius: 999px; background: #f2f4f7; color: #475467;
+    font-size: 12px; font-weight: 550;
+  }
+  details > summary:hover { background: #e9edf3; }
+
+  /* 趋势卡更紧凑 */
+  .trend-summary {
+    display: flex; gap: 16px; margin-bottom: 12px;
+    font-size: 12px; color: #667085;
+  }
+  .trend-summary b { font-size: 15px; color: #101828; margin-right: 3px; font-variant-numeric: tabular-nums; }
+  .table th {
+    text-align: left; font-size: 12px; font-weight: 600; color: #667085;
+    background: #f9fafb; padding: 10px 14px; border-bottom: 1px solid var(--border);
+  }
+  .table td { padding: 12px 14px; border-bottom: 1px solid #f2f4f7; }
+  .table tbody tr:hover td { background: #fcfcfd; }
+  .table tbody tr:last-child td { border-bottom: none; }
+  .trend-row { display: grid; grid-template-columns: 56px 1fr 78px; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .trend-track { height: 9px; border-radius: 999px; background: #f2f4f7; overflow: hidden; }
+  .trend-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2563eb, #93c5fd); }
+  .trend-label { font-size: 12.5px; color: #344054; }
+  .trend-value { font-size: 12px; color: #667085; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------- 动作标准 ---------- */
+  .seg {
+    display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 18px;
+    background: #eef2f6; border-radius: 12px;
+  }
+  .seg button {
+    padding: 8px 16px; border: none; border-radius: 9px; background: transparent;
+    color: #475467; font-size: 13px; font-family: inherit; cursor: pointer;
+  }
+  .seg button.on { background: #fff; color: #101828; font-weight: 650; box-shadow: var(--shadow-sm); }
+  .std-goal { background: linear-gradient(135deg, #eff6ff 0%, #ffffff 60%); border-color: #d1e9ff; }
+  .std-goal-label { font-size: 12px; color: #175cd3; font-weight: 650; margin-bottom: 6px; }
+  .std-goal-text { font-size: 17px; font-weight: 650; color: #101828; line-height: 1.5; }
+  .std-view { font-size: 12px; color: #667085; margin-top: 6px; }
+  .std-section { margin-top: 20px; }
+  .std-section .card-title { margin-bottom: 10px; }
+  .std-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .std-metric { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .std-metric-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .std-label { font-size: 12.5px; color: #475467; }
+  .std-value { font-size: 24px; font-weight: 700; color: #101828; margin: 6px 0 4px; letter-spacing: -.5px; }
+  .std-hint { font-size: 11.5px; color: #667085; line-height: 1.6; }
+  .src-tag { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
+  .src-tag.dataset { background: #ecfdf3; color: #067647; }
+  .src-tag.assumption { background: #fffaeb; color: #b54708; }
+  .std-steps { margin: 0; padding-left: 20px; color: #344054; font-size: 13.5px; line-height: 2; }
+  .std-mistake {
+    background: #fff; border: 1px solid var(--border); border-left: 3px solid #d0d5dd;
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .std-mistake.yes { border-left-color: #f04438; }
+  .std-mistake.no { border-left-color: #d0d5dd; }
+  .std-mistake-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 3px; }
+  .std-mistake-head b { font-size: 13.5px; color: #101828; }
+  .std-note { font-size: 11.5px; color: #175cd3; margin-top: 5px; }
+  .std-mistake.no .std-note { color: #667085; }
+  .std-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 12px; padding: 5px 10px; border-radius: 999px; background: #f2f4f7; color: #475467; }
+  .std-disclaimer {
+    margin-top: 20px; padding: 12px 14px; border-radius: 10px;
+    background: #f9fafb; border: 1px solid #eaecf0; font-size: 11.5px; color: #667085; line-height: 1.7;
+  }
+
+  /* ---------- 通用弹窗 / 提示 ---------- */
+  .modal {
+    position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+    background: rgba(16, 24, 40, .45); padding: 20px; backdrop-filter: blur(2px);
+  }
+  .modal-card {
+    width: min(640px, 100%); max-height: 86vh; overflow: auto;
+    background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 20px 48px rgba(16,24,40,.18);
+  }
+  .hist-metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px; margin-bottom: 14px;
+  }
+  .hist-metric {
+    background: #f9fafb; border: 1px solid #eef0f3; border-radius: 10px; padding: 9px 11px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .hist-metric span { font-size: 11.5px; color: #667085; }
+  .hist-metric b { font-size: 16px; color: #101828; }
+  .link-btn {
+    border: none; background: none; color: var(--primary); font-size: 13px;
+    font-family: inherit; cursor: pointer; padding: 2px 4px;
+  }
+  .link-btn:hover { text-decoration: underline; }
+  .toast {
+    position: fixed; left: 50%; bottom: 78px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px; z-index: 70;
+    background: #101828; color: #fff; padding: 10px 14px; border-radius: 999px;
+    font-size: 13px; box-shadow: 0 10px 28px rgba(16,24,40,.28);
+  }
+  .toast-btn {
+    border: none; background: #2563eb; color: #fff; font-size: 12.5px;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer; font-family: inherit;
+  }
+
+  .tabbar { display: none; }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .page-head { padding: 0 18px; height: 60px; }
+    .content { padding: 18px 16px 96px; max-width: none; }
+    .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stat { padding: 12px; }
+    .stat .v { font-size: 24px; letter-spacing: -.6px; }
+    .stat .k { font-size: 10.5px; line-height: 1.35; margin-top: 3px; }
+    .exercise-grid { grid-template-columns: 1fr; }
+    .hero { padding: 16px; margin-bottom: 14px; }
+    .hero h2 { font-size: 16px; }
+    .hero p { font-size: 12.5px; line-height: 1.6; }
+    #bannerLogin { white-space: nowrap; flex: none; padding: 8px 14px; }
+    #guestBanner .row { gap: 10px; }
+    .report-grid, .profile-grid { grid-template-columns: 1fr; }
+    /* 手机端：侧栏改成底部抽屉，设置项不再不可达 */
+  #sideToggle {
+    display: none; position: absolute; top: 46px; right: 12px; z-index: 6;
+    padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25);
+    background: rgba(11,13,16,.6); color: #e6edf3; font-size: 12px;
+    cursor: pointer; backdrop-filter: blur(4px);
+  }
+  .side-scrim {
+    display: none; position: fixed; inset: 0; z-index: 44;
+    background: rgba(16, 24, 40, .38);
+  }
+  .side-scrim.show { display: block; }
+
+  .train-side {
+    display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    width: auto; /* 桌面侧栏固定 300px，抽屉必须撑满宽度 */
+    max-height: 74vh; overflow-y: auto; background: #fff;
+    border-radius: 18px 18px 0 0; padding: 18px 18px 24px;
+    transform: translateY(105%); transition: transform .22s ease;
+    box-shadow: 0 -12px 34px rgba(16, 24, 40, .22);
+  }
+  .train-side.open { transform: translateY(0); }
+  .train-side::before {
+    content: ''; display: block; width: 40px; height: 4px; border-radius: 2px;
+    background: #e4e7ec; margin: 0 auto 12px;
+  }
+    .counter .n { font-size: 64px; }
+    .counter { bottom: 54px; }
+    /* 竖屏下 4:3 视频会留大片黑边：改为铺满裁两侧空背景，
+       人站中间时不影响可见性，同时把计数与提示压在画面内 */
+    #video, #overlay { object-fit: cover; }
+    .cam-wrap { min-height: 200px; }
+    .hud { font-size: 10.5px; }
+    .depthbar { left: 10px; right: 10px; bottom: 10px; }
+    .depth-text { font-size: 11px; }
+    #flipCam { top: 40px; right: 8px; font-size: 11px; padding: 6px 10px; }
+    #sideToggle { display: block; top: 84px; font-size: 11px; padding: 6px 10px; }
+    #sideToggle { right: 8px; }
+
+    .tabbar {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 62px;
+      background: rgba(255,255,255,.96); border-top: 1px solid var(--border);
+      align-items: center; justify-content: space-around; z-index: 20;
+      backdrop-filter: blur(10px);
+    }
+    .tabbar .t {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font-size: 11px; color: var(--muted); cursor: pointer; padding: 6px 20px; border-radius: 10px;
+    }
+    .tabbar .t.on { color: var(--primary); font-weight: 600; }
+    .tabbar .dot { width: 17px; height: 17px; border: 1.6px solid currentColor; border-radius: 6px; }
+
+    /* 训练页与登录页占满全屏，底部导航会让位，否则会盖住「结束训练」 */
+    body[data-screen="train"] .tabbar,
+    body[data-screen="login"] .tabbar { display: none; }
+    body[data-screen="train"] .trainbar { padding-bottom: 16px; }
+
+  #screen-login { padding: 24px 16px; }
+    .login-card { padding: 24px; }
+    .hero { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12h4l2.5-6 4 12 2.5-6H22" />
+        </svg>
+      </div>
+      <div>
+        <div class="name">AI 健身</div>
+        <div class="ver">v0.1.0 · 内测</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="sideNav">
+      <button class="nav-item on" data-go="home">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3.5l2-5 3.5 10 2.5-5H21"/></svg>
+        训练
+      </button>
+      <button class="nav-item" data-go="standards">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M8 8h7M8 11.5h5"/></svg>
+        标准
+      </button>
+      <button class="nav-item" data-go="history">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        记录
+      </button>
+      <button class="nav-item" data-go="profile">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+        我的
+      </button>
+    </nav>
+
+    <div class="side-foot">
+      <button class="btn ghost block" id="sideLogin" style="font-size:13px;padding:9px;margin-bottom:10px">
+        登录 / 注册
+      </button>
+      <div class="account">
+        <div class="avatar" id="avatar">访</div>
+        <div>
+          <div class="who" id="sideAccount">未登录</div>
+          <div class="role" id="sideRole">游客模式</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主区域 -->
+  <div class="main">
+
+    <!-- 登录 -->
+    <section class="screen show" id="screen-login">
+      <div class="login-card card" style="box-shadow:var(--shadow-lg)">
+        <div class="login-head">
+          <div class="mark">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff"
+                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12h4l2.5-6 4 12 2.5-6H22" />
+            </svg>
+          </div>
+          <h2>登录 AI 健身</h2>
+          <p>设备内识别动作，只同步训练摘要</p>
+        </div>
+
+        <input id="email" type="email" placeholder="邮箱" autocomplete="username" style="margin-bottom:10px" />
+        <input id="password" type="password" placeholder="密码（至少 8 位）" autocomplete="current-password" style="margin-bottom:14px" />
+
+        <button class="btn block" id="loginBtn">登录</button>
+        <button class="btn ghost block" id="registerBtn" style="margin-top:10px">注册新账号</button>
+
+        <div class="divider">或</div>
+
+        <button class="btn ghost block" id="guestBtn">先不登录，直接训练</button>
+
+        <div class="msg" id="loginMsg" style="text-align:center;margin-top:14px"></div>
+        <div class="muted" style="text-align:center;margin-top:16px;font-size:11.5px">
+          画面不上传 · 不做医疗诊断
+        </div>
+      </div>
+    </section>
+
+    <!-- 首页 -->
+    <section class="screen" id="screen-home">
+      <div class="page-head">
+        <div>
+          <h1 id="greeting">今天练点什么</h1>
+          <div class="sub" id="homeSub">选择动作开始训练</div>
+        </div>
+        <button class="btn" id="quickStart">开始训练</button>
+      </div>
+
+      <div class="content">
+        <div class="card card-pad" id="onlineBanner" style="margin-bottom:18px;display:none;border-color:#b8cdf7;background:#eef4ff">
+          <div style="font-weight:650;color:#1d4ed8">在线演示版</div>
+          <div class="muted" style="margin-top:2px">
+            训练、识别、计数都在这台设备的浏览器里真实运行；演示环境没有后端，
+            因此记录不会保存，也不能登录。
+          </div>
+        </div>
+
+        <div class="card card-pad" id="guestBanner" style="margin-bottom:18px;display:none;border-color:#fedf89;background:#fffaeb">
+          <div class="row">
+            <div>
+              <div style="font-weight:650;color:#93370d">当前是游客模式</div>
+              <div class="muted" style="margin-top:2px">现在可以正常训练，但记录不会上传。登录后可保存与查看历史。</div>
+            </div>
+            <button class="btn" id="bannerLogin">去登录</button>
+          </div>
+        </div>
+
+        <div class="hero">
+          <h2>在设备内观察动作，不需要上传视频</h2>
+          <p>骨架识别与规则判断都在你的浏览器里完成，只有次数、时长和问题标签会同步。</p>
+        </div>
+
+        <div class="stats">
+          <div class="card stat"><div class="v" id="weekCount">0</div><div class="k">本周训练次数</div></div>
+          <div class="card stat"><div class="v" id="weekReps">0</div><div class="k">本周动作次数</div></div>
+          <div class="card stat"><div class="v" id="weekSec">0</div><div class="k">本周有效秒数</div></div>
+        </div>
+
+        <div class="section-title">
+          <h3>选择动作</h3>
+          <span class="muted">均为侧面视角</span>
+        </div>
+
+        <div class="exercise-grid">
+          <button class="exercise" data-ex="squat">
+            <div class="ico"><span class="idx">01</span></div>
+            <div>
+              <div class="name">深蹲</div>
+              <div class="desc">计次 · 目标膝角 ≤100° · 侧面</div>
+            </div>
+            <div class="go">›</div>
+          </button>
+
+          <button class="exercise" data-ex="push_up">
+            <div class="ico"><span class="idx">02</span></div>
+            <div>
+              <div class="name">俯卧撑</div>
+              <div class="desc">计次 · 目标肘角 ≤95° · 侧面</div>
+            </div>
+            <div class="go">›</div>
+          </button>
+
+          <button class="exercise" data-ex="plank">
+            <div class="ico"><span class="idx">03</span></div>
+            <div>
+              <div class="name">平板支撑</div>
+              <div class="desc">计时 · 肩髋踝 160–180° · 侧面</div>
+            </div>
+            <div class="go">›</div>
+          </button>
+        </div>
+
+        <button class="std-entry" data-go="standards">
+          <div class="std-entry-ico">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
+              <path d="M8 8h7M8 11.5h5"/>
+            </svg>
+          </div>
+          <div class="std-entry-main">
+            <div class="std-entry-title">动作标准：怎么做才算对</div>
+            <div class="std-entry-desc">每个动作的目标角度、常见错误，以及哪些侧面看不到（不假装能判）</div>
+          </div>
+          <span class="std-entry-go">查看标准 ›</span>
+        </button>
+
+        <div class="card card-pad">
+          <div class="row" style="margin-bottom:10px">
+            <div class="card-title">最近记录</div>
+            <span class="muted" id="recentHint">本周</span>
+          </div>
+          <div id="recentList" class="muted">还没有记录</div>
+        </div>
+
+        <div class="muted" style="margin-top:16px;font-size:12px">
+          阈值为工程初始假设，计数与提示未经人群验证，不能替代教练或医疗建议。
+        </div>
+      </div>
+    </section>
+
+    <!-- 训练 -->
+    <section class="screen" id="screen-train">
+      <div class="train-layout">
+        <div class="cam-col">
+          <div class="cam-wrap">
+            <video id="video" playsinline muted></video>
+            <canvas id="overlay"></canvas>
+
+            <div class="hud">
+              <span id="hudLeft">—</span>
+              <span id="hudRight">未评估</span>
+            </div>
+
+            <div class="prompt" id="prompt"></div>
+
+            <div class="rep-score" id="repScore" style="display:none">—</div>
+
+          <div class="counter">
+              <div class="n" id="reps">0</div>
+              <div class="l"><span id="counterLabel">有效次数</span> · <span id="angle">—</span></div>
+            </div>
+
+            <div class="notice" id="restOverlay" style="display:none">
+            <div class="big">目标达成！休息一下</div>
+            <div class="rest-count" id="restCount">60</div>
+            <div class="muted" style="color:#98a2b3">下一组开始前会语音提醒你，也可以随时跳过</div>
+            <div class="actions">
+              <button class="btn" id="skipRest">跳过休息，开始下一组</button>
+            </div>
+          </div>
+
+          <div class="pose-guide" id="poseGuide" style="display:none">
+            <span class="pose-guide-ico">◧</span>
+            <span id="poseGuideText">侧身站立 · 全身入框 · 离镜头 2–3 米</span>
+          </div>
+
+          <div class="depthbar" id="depthWrap" style="display:none">
+            <div class="depth-text" id="depthText">—</div>
+            <div class="depth-track"><div class="depth-fill" id="depthFill" style="width:0%"></div></div>
+          </div>
+
+          <button id="flipCam" title="切换前/后摄像头">切换摄像头</button>
+          <button id="sideToggle" title="训练设置">⚙ 设置</button>
+          <div class="side-scrim" id="sideScrim"></div>
+
+          <div class="notice" id="camNotice" style="display:none">
+              <div class="big" id="noticeTitle">需要摄像头权限</div>
+              <div class="muted" id="noticeText" style="color:#98a2b3;max-width:420px;text-align:center">
+                浏览器已拒绝访问摄像头，需要你手动允许一次。
+              </div>
+              <ol id="noticeSteps">
+                <li>点地址栏左侧的锁形图标</li>
+                <li>把「摄像头」改为「允许」</li>
+                <li>回到本页点下面的按钮重试</li>
+              </ol>
+              <div class="actions">
+                <button class="btn" id="retryCam">重新申请权限</button>
+                <button class="btn ghost" id="cancelCam">返回选择动作</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="trainbar">
+            <button id="pauseBtn">暂停</button>
+            <button id="finishBtn" class="primary">结束训练</button>
+          </div>
+        </div>
+
+        <aside class="train-side">
+          <div class="side-title">实时数据</div>
+          <div class="metric"><span>识别帧率</span><b id="sideFps">—</b></div>
+          <div class="metric"><span>关节角度</span><b id="sideAngle">—</b></div>
+          <div class="metric"><span>有效覆盖率</span><b id="sideCoverage">—</b></div>
+          <div class="metric"><span>动作阶段</span><b id="sidePhase">—</b></div>
+          <div class="muted" style="font-size:11px;margin-top:2px">覆盖率低于 80% 时评分为「参考」</div>
+
+          <div class="side-block">
+            <div class="side-title">机位</div>
+            <div class="goalbar" id="viewBar"></div>
+            <div class="muted" id="viewHint" style="font-size:11px;margin-top:6px;line-height:1.6">
+              侧面判定最准；正面时手机正对自己，深蹲阈值会放宽
+            </div>
+            <div class="calib-hint" id="calibHint">校准中… 请先站直 1–2 秒</div>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">识别灵敏度</div>
+            <div class="goalbar" id="sensBar"></div>
+            <div class="muted" id="sensHint" style="font-size:11px;margin-top:6px;line-height:1.6">
+              侧面机位看不清时切「灵敏」：放宽置信度要求，更容易计数
+            </div>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">怎么拿分</div>
+            <div class="muted" style="font-size:11.5px;line-height:1.8">
+              <b>每完成一次就给单次评分</b>（深度 70% + 节奏 30%）。<br>
+              <b>覆盖率决定可信度</b>：≥80% 为正式分，低于 80% 仍给分但标注「参考」。<br>
+              <b>规范性 50%</b>：完整动作（到位的幅度 + 正常节奏）占有效观测的比例<br>
+              <b>完成度 30%</b>：完成次数 ÷ 尝试次数<br>
+              <b>稳定性 20%</b>：同一阶段内身体越稳分越高（晃动 ≤2° 满分，≥12° 零分）
+            </div>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">角度曲线（近 12 秒）</div>
+            <svg id="angleSpark" viewBox="0 0 220 56" preserveAspectRatio="none"
+                 style="width:100%;height:56px;display:block;background:#f8fafc;border:1px solid #e4e7ec;border-radius:8px">
+              <line x1="0" y1="47" x2="220" y2="47" stroke="#e4e7ec" stroke-width="1"/>
+              <polyline id="sparkLine" fill="none" stroke="#2563eb" stroke-width="1.6" points=""/>
+            </svg>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">本次目标</div>
+            <div class="goalbar" id="goalBar"></div>
+            <div class="muted" id="goalStatus" style="font-size:11.5px;margin-top:6px"></div>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">组间休息</div>
+            <div class="goalbar" id="restBar"></div>
+          </div>
+
+          <div class="side-block">
+            <div class="side-title">动作要点</div>
+            <div class="muted" id="sideHint">侧身站立，全身入框。</div>
+          </div>
+
+          <div class="tip">
+            画面不会离开这台设备。结束训练后，只有次数与时长会同步。
+          </div>
+
+          <div class="side-block" style="display:flex;gap:8px">
+            <button class="btn ghost block" id="voiceBtn" style="flex:1">语音播报：开</button>
+          </div>
+          <div class="side-block">
+            <button class="btn ghost block" id="cancelTrain">退出训练</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 报告 -->
+    <section class="screen" id="screen-report">
+      <div class="page-head">
+        <div>
+          <h1>训练报告</h1>
+          <div class="sub" id="reportSub">深蹲 · 侧面</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="r-summary" id="rSummary">—</div>
+
+        <div class="report-grid">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:8px">本次数据</div>
+            <div class="big-metric"><span>有效次数</span><b id="rReps">0</b></div>
+            <div class="big-metric"><span>尝试 / 未完成</span><b id="rAttempts">0 / 0</b></div>
+            <div class="big-metric"><span>组数（各组成绩）</span><b id="rSets">—</b></div>
+            <div class="big-metric"><span>平均深度</span><b id="rDepth">—</b></div>
+            <div class="big-metric"><span>平均每次</span><b id="rTempo">—</b></div>
+            <div class="big-metric"><span>有效时长</span><b id="rValid">0.0 秒</b></div>
+            <div class="big-metric"><span>有效覆盖率</span><b id="rCoverage">0%</b></div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:8px">评分</div>
+            <div id="rScoreBox" class="score-empty">数据不足，不出分</div>
+            <div class="muted" id="rScoreNote" style="margin-top:10px;font-size:12px;line-height:1.6"></div>
+
+            <div class="subscores" id="subScores">
+              <div class="sub-row">
+                <span>规范性</span>
+                <div class="sub-track"><div class="sub-fill" id="subCompliance" style="width:0%"></div></div>
+                <b id="subComplianceVal">—</b>
+              </div>
+              <div class="sub-row">
+                <span>完成度</span>
+                <div class="sub-track"><div class="sub-fill" id="subCompletion" style="width:0%"></div></div>
+                <b id="subCompletionVal">—</b>
+              </div>
+              <div class="sub-row">
+                <span>稳定性</span>
+                <div class="sub-track"><div class="sub-fill" id="subStability" style="width:0%"></div></div>
+                <b id="subStabilityVal">—</b>
+              </div>
+            </div>
+            <details style="margin-top:12px">
+              <summary class="muted" style="font-size:12px;cursor:pointer;user-select:none">评分细则（怎么提高每一项）</summary>
+              <div class="muted" style="font-size:12px;line-height:1.9;margin-top:8px">
+                <b>第 0 步 · 覆盖率 ≥ 80%（门槛）</b><br>
+                有效覆盖率 = 身体完整且清晰入框的时间 ÷ 训练总时长。不到 80% 一律不出分——
+                先保证相机够远、光线从正面来、全程待在画面里。<br>
+                <b>规范性 50%</b><br>
+                完整动作的时间占比。完整 = 幅度到位（如深蹲膝角 ≤100°）且节奏在正常范围
+                （0.8–8 秒/次）。浅蹲、过快过慢的时间都不算。<br>
+                <b>完成度 30%</b><br>
+                完成次数 ÷ 尝试次数。做 5 次成了 4 次就是 80 分。少做但做标准，好过凑数量。<br>
+                <b>稳定性 20%</b><br>
+                同一阶段内（站立时、最低点时）身体晃动越小分越高：晃动 ≤2° 满分，≥12° 零分。
+                匀速起落、少晃动。<br>
+                <span style="opacity:.75">阈值是工程初始假设，正在用公开数据集（KIMORE / UI-PRMD）校准，
+                细则可能随版本调整——每次调整都会写进更新日志。</span>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="card card-pad" id="rFeedback" style="margin-top:16px;display:none">
+          <div class="card-title" style="margin-bottom:12px">本次锻炼分析</div>
+          <div id="rFeedbackBody"></div>
+          <div class="muted" style="margin-top:12px;font-size:11.5px">
+            以上均为对画面中运动学事实的描述，不构成医疗或受伤风险判断。
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:16px">
+          <button class="btn ghost" id="doneBtn">不保存，返回首页</button>
+          <button class="btn ghost" id="saveCard">保存结果图片</button>
+          <button class="btn" id="saveBtn" disabled>保存训练</button>
+        </div>
+        <div class="msg" id="saveMsg" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- 记录 -->
+    <section class="screen" id="screen-history">
+      <div class="page-head">
+        <div>
+          <h1>训练记录</h1>
+          <div class="sub" id="historySub">近 30 条</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card card-pad" id="trendBox" style="margin-bottom:16px"></div>
+        <div id="historyBody">
+          <div class="muted">加载中…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 动作标准 -->
+    <section class="screen" id="screen-standards">
+      <div class="page-head">
+        <div>
+          <h1>动作标准</h1>
+          <div class="sub">每个数字都标了来源：数据 = 公开数据集，假设 = 待校准</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="seg" id="stdTabs">
+          <button data-std="squat" class="on">深蹲</button>
+          <button data-std="push_up">俯卧撑</button>
+          <button data-std="plank">平板支撑</button>
+        </div>
+        <div id="stdBody"></div>
+      </div>
+    </section>
+
+    <!-- 我的 -->
+    <section class="screen" id="screen-profile">
+      <div class="page-head">
+        <div>
+          <h1>我的</h1>
+          <div class="sub" id="profileSub">未登录</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="profile-grid">
+          <div class="card card-pad" id="profileGuest">
+            <div class="card-title" style="margin-bottom:6px">登录后同步记录</div>
+            <div class="muted" style="margin-bottom:12px">
+              现在就能训练，但成绩只留在本机。登录后会计入云端历史。
+            </div>
+            <input id="pEmail" type="email" placeholder="邮箱" autocomplete="username" style="margin-bottom:8px" />
+            <input id="pPassword" type="password" placeholder="密码（至少 8 位）" autocomplete="current-password" style="margin-bottom:12px" />
+            <div class="row">
+              <button class="btn" id="pLogin" style="flex:1">登录</button>
+              <button class="btn ghost" id="pRegister" style="flex:1">注册</button>
+            </div>
+            <div class="msg" id="profileMsg" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card card-pad" id="profileUser" style="display:none">
+            <div class="row" style="margin-bottom:10px">
+              <div class="card-title">当前账号</div>
+              <span class="tag ok" id="accountTag">已登录</span>
+            </div>
+            <div class="muted" id="accountText">—</div>
+            <button class="btn ghost block" id="logoutBtn" style="margin-top:14px">退出登录</button>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:10px">数据备份</div>
+            <div class="muted" style="margin-bottom:12px">
+              本机账号的记录存在这台设备上。换手机或清理浏览器前，先导出备份。
+            </div>
+            <div class="row">
+              <button class="btn ghost" id="exportData" style="flex:1">导出备份</button>
+              <button class="btn ghost" id="importData" style="flex:1">导入备份</button>
+            </div>
+            <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+            <button class="btn ghost block" id="clearData" style="margin-top:8px;color:#b42318">清空本机记录</button>
+            <div class="msg" id="dataMsg" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:10px">设备能力</div>
+            <div class="kv"><span>推理运行时</span><span>MediaPipe Lite 1.1.1</span></div>
+            <div class="kv"><span>模型</span><span>pose_landmarker_lite</span></div>
+            <div class="kv"><span>规则版本</span><span>0.1.0（内测）</span></div>
+            <div class="kv"><span>采集分辨率</span><span>640×480</span></div>
+          </div>
+        </div>
+
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="card-title" style="margin-bottom:10px">隐私</div>
+          <div class="muted">
+            画面在设备内处理，保存时只同步摘要。正常训练不上传任何图像，也不申请麦克风权限。
+            删除账号会同时清除在线记录并撤销所有会话。
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- 窄屏底部导航 -->
+<div class="modal" id="histDetail" style="display:none">
+  <div class="modal-card">
+    <div class="row" style="margin-bottom:12px">
+      <div class="card-title" id="histTitle">训练详情</div>
+      <button class="link-btn" id="histClose">关闭</button>
+    </div>
+    <div id="histBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="updateToast" style="display:none">
+  <span>已更新到新版本</span>
+  <button class="toast-btn" id="updateReload">立即刷新</button>
+</div>
+
+<nav class="tabbar">
+  <div class="t on" data-go="home"><div class="dot"></div>训练</div>
+  <div class="t" data-go="standards"><div class="dot"></div>标准</div>
+  <div class="t" data-go="history"><div class="dot"></div>记录</div>
+  <div class="t" data-go="profile"><div class="dot"></div>我的</div>
+</nav>
+
+<script type="module" src="./app.js"></script>
+<script>
+  // PWA：HTTPS（或 localhost）下注册 Service Worker，支持安装与离线
+  if ('serviceWorker' in navigator) {
+    var reloading = false;
+    // 首访时 SW 也会"接管"页面，但那不是更新——只有原本已有控制器才算新版本
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (reloading) return;
+      if (!hadController) {
+        hadController = true;
+        return;
+      }
+      var toast = document.getElementById('updateToast');
+      if (toast) toast.style.display = 'flex';
+    });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {
+        /* 注册失败不影响使用，只是没有离线与安装能力 */
+      });
+      var btn = document.getElementById('updateReload');
+      if (btn) {
+        btn.addEventListener('click', function () {
+          reloading = true;
+          location.reload();
+        });
+      }
+    });
+  }
+</script>
+</body>
+</html>
